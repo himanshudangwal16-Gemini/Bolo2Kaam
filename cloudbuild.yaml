@@ -1,0 +1,33 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/khatavani/khatavani:$SHORT_SHA', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/khatavani/khatavani:$SHORT_SHA']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'khatavani'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/khatavani/khatavani:$SHORT_SHA'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--session-affinity'
+      - '--min-instances'
+      - '1'
+      - '--timeout'
+      - '3600'
+      - '--set-env-vars'
+      - 'GCP_PROJECT=$PROJECT_ID,GCP_LOCATION=${_REGION},USE_VERTEX_AI=true,USE_FIRESTORE=true,GEMINI_LIVE_MODEL=gemini-live-2.5-flash-native-audio'
+
+substitutions:
+  _REGION: us-central1
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/khatavani/khatavani:$SHORT_SHA'
